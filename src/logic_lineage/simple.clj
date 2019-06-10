@@ -56,24 +56,29 @@
            (producto product))))
 
 
+(defn breado [product]
+  "Relates a product to the specific Bread product."
+  (fresh [yeast water flour bread bname parts]
+    (ingrediento :yeast yeast)
+    (ingrediento :water water)
+    (ingrediento :flour flour) 
+    (== parts [yeast water flour])
+    (== bread [:bread parts])
+    (producto bread)
+    (== bread product)))
+
+
 (run 5 [q]
-  (fresh [p-name p-parts p]
-    (membero p-name [:yeast :water :flour])
-    (ingrediento p-name p)
-    (== q p)))
+  (fresh [bread]
+    (breado bread)
+    (== q bread)))
+
 
 (defn create-bread []
   (first
    (run* [q]
-     (fresh [bread yeast water flour bread-name bread-parts]
-       (ingrediento :yeast yeast)
-       (ingrediento :water water)
-       (ingrediento :flour flour)
-       (== bread [bread-name bread-parts])
-       (== bread [:bread [yeast water flour]])
-       (producto yeast)
-       (producto water)
-       (producto flour)
+     (fresh [bread]
+       (breado bread)
        (producto bread)
        (== q bread)))))
   
