@@ -68,10 +68,37 @@
     (== bread product)))
 
 
+(defn containso [ingredient product]
+  "Relation between an ingredient and a product, true if the product contains that ingredient."
+  (producto ingredient)
+  (producto product)
+  (conde
+   ((== product ingredient) :foo)
+   ((matche [product]
+            ([[?name [?parts-first . ?parts-rest]]]
+             (conde 
+              ((== ingredient ?parts-first))
+              ((membero ingredient ?parts-rest))
+              ;; TODO recurse into composite products
+             ))))))
+             
+
+
 (run 5 [q]
-  (fresh [bread]
+  (fresh [bread ingredient]
     (breado bread)
-    (== q bread)))
+    (containso ingredient bread)
+    (== q ingredient)))
+
+(run 5 [q]
+  (fresh [bread yeast flour ham contains-ham contains-flour]
+    (ingrediento :yeast yeast)
+    (ingrediento :flour flour)
+    (ingrediento :ham ham)
+    (breado bread)
+    (== contains-ham (containso ham bread))
+    (== contains-flour (containso flour bread))
+    (== q [bread contains-ham contains-flour])))
 
 
 (defn create-bread []
