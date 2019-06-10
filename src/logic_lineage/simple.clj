@@ -25,6 +25,22 @@
            (producto ?parts-first)
            (producto [?name ?parts-rest]))))
 
+
+(defn product-nameo [product product-name]
+  "Relates a product to its name."
+  (matche [product]
+          ([[?name ?parts]]
+           (== product-name ?name))))
+
+(run 5 [q]
+  (fresh [p-name p-parts p x]
+    (membero p-name [:yeast :water :flour])
+    (ingrediento p-name p)
+    (product-nameo p x)
+    (== q x)))
+
+
+
 (defn ingrediento [i-name product]
   "Relates a name of a basic (non-composite) ingredient to the
   corresponding product.
@@ -40,24 +56,24 @@
            (producto product))))
 
 
-
 (run 5 [q]
   (fresh [p-name p-parts p]
     (membero p-name [:yeast :water :flour])
     (ingrediento p-name p)
     (== q p)))
 
-
-(run* [q]
-  (fresh [bread yeast water flour bread-name bread-parts]
-    (ingrediento :yeast yeast)
-    (ingrediento :water water)
-    (ingrediento :flour flour)
-    (== bread [bread-name bread-parts])
-    (== bread [:bread [yeast water flour]])
-    (producto yeast)
-    (producto water)
-    (producto flour)
-    (producto bread)
-    (== q bread)))
-
+(defn create-bread []
+  (first
+   (run* [q]
+     (fresh [bread yeast water flour bread-name bread-parts]
+       (ingrediento :yeast yeast)
+       (ingrediento :water water)
+       (ingrediento :flour flour)
+       (== bread [bread-name bread-parts])
+       (== bread [:bread [yeast water flour]])
+       (producto yeast)
+       (producto water)
+       (producto flour)
+       (producto bread)
+       (== q bread)))))
+  
