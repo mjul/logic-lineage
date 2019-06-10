@@ -11,7 +11,10 @@
 
 (defn producto [x]
   "A product is an element with no parts, or a composite of products.
-   A composite is a product where the parts are also products (composites or elements)."
+   A composite is a product where the parts are also products (composites or elements).
+
+   Products are internally represented as a tuple of name and constituent parts.
+   "
   (matche [x]
           (;; element
            [[?name ?parts]]
@@ -22,20 +25,34 @@
            (producto ?parts-first)
            (producto [?name ?parts-rest]))))
 
+(defn ingrediento [i-name product]
+  "Relates a name of a basic (non-composite) ingredient to the
+  corresponding product.
+
+  For example
+
+     (ingrediento :yeast [:yeast []])
+  "
+  (matche [product]
+          ([[?name ?parts]]
+           (emptyo ?parts)
+           (== i-name ?name)
+           (producto product))))
+
+
 
 (run 5 [q]
   (fresh [p-name p-parts p]
     (membero p-name [:yeast :water :flour])
-    (== p [p-name p-parts])
-    (producto p)
+    (ingrediento p-name p)
     (== q p)))
 
 
 (run* [q]
   (fresh [bread yeast water flour bread-name bread-parts]
-    (== yeast [:yeast []])
-    (== water [:water []])
-    (== flour [:flour []])
+    (ingrediento :yeast yeast)
+    (ingrediento :water water)
+    (ingrediento :flour flour)
     (== bread [bread-name bread-parts])
     (== bread [:bread [yeast water flour]])
     (producto yeast)
