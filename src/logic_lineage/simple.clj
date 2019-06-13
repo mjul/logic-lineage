@@ -25,21 +25,17 @@
            (producto ?parts-first)
            (producto [?name ?parts-rest]))))
 
+(defn product-partso [product parts]
+  "Relates a product to its parts."
+  (matche [product]
+          ([[?name ?parts]]
+           (== parts ?parts))))
 
 (defn product-nameo [product product-name]
   "Relates a product to its name."
   (matche [product]
           ([[?name ?parts]]
            (== product-name ?name))))
-
-(run 5 [q]
-  (fresh [p-name p-parts p x]
-    (membero p-name [:yeast :water :flour])
-    (ingrediento p-name p)
-    (product-nameo p x)
-    (== q x)))
-
-
 
 (defn ingrediento [i-name product]
   "Relates a name of a basic (non-composite) ingredient to the
@@ -55,6 +51,13 @@
            (== i-name ?name)
            (producto product))))
 
+(comment
+  (run 5 [q]
+    (fresh [p-name p-parts p x]
+      (membero p-name [:yeast :water :flour])
+      (ingrediento p-name p)
+      (product-nameo p x)
+      (== q x))))
 
 (defn breado [product]
   "Relates a product to the specific Bread product."
@@ -73,33 +76,33 @@
   (producto ingredient)
   (producto product)
   (conde
-   ((== product ingredient) :foo)
+   ((== product ingredient))
    ((matche [product]
-            ([[?name [?parts-first . ?parts-rest]]]
-             (conde 
-              ((== ingredient ?parts-first))
-              ((membero ingredient ?parts-rest))
-              ;; TODO recurse into composite products
-             ))))))
-             
+            ([[?name ?parts]]
+             (conde
+              ((membero ingredient ?parts))
+              ((fresh [composite]
+                 (membero composite ?parts)
+                 (containso ingredient composite)))))))))
 
+(comment
+  (run 5 [q]
+    (fresh [bread ingredient iname iparts]
+      (breado bread)
+      (containso ingredient bread)
+      (== [iname iparts] ingredient)
+      (== q iname))))
 
-(run 5 [q]
-  (fresh [bread ingredient]
-    (breado bread)
-    (containso ingredient bread)
-    (== q ingredient)))
-
-(run 5 [q]
-  (fresh [bread yeast flour ham contains-ham contains-flour]
-    (ingrediento :yeast yeast)
-    (ingrediento :flour flour)
-    (ingrediento :ham ham)
-    (breado bread)
-    (== contains-ham (containso ham bread))
-    (== contains-flour (containso flour bread))
-    (== q [bread contains-ham contains-flour])))
-
+(comment
+  (run 5 [q]
+    (fresh [bread yeast flour ham contains-ham contains-flour]
+      (ingrediento :yeast yeast)
+      (ingrediento :flour flour)
+      (ingrediento :ham ham)
+      (breado bread)
+      (== contains-ham (containso ham bread))
+      (== contains-flour (containso flour bread))
+      (== q [bread contains-ham contains-flour]))))
 
 (defn create-bread []
   (first
@@ -108,4 +111,22 @@
        (breado bread)
        (producto bread)
        (== q bread)))))
-  
+
+(defn sandwicho [s-name fillings product]
+  "Relates a sandwich with name and fillings to the corresponding product."
+  (fresh [bread sandwich filling ingredients]
+    (breado bread)
+    (conso bread fillings ingredients) 
+    (product-nameo sandwich s-name)
+    (product-partso sandwich ingredients)
+    (producto sandwich)
+    (== product sandwich)))
+
+(defn create-sandwich []
+  (first
+   (run* [q]
+     (fresh [sandwich ham cheese] 
+       (ingrediento :ham ham)
+       (ingrediento :cheese cheese)
+       (sandwicho :ham-and-cheese-sandwich [ham cheese] sandwich)
+       (== q sandwich)))))
