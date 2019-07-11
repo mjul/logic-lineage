@@ -138,9 +138,8 @@
 (comment
   ;; See which downstream fields are impacted if there is an error in BBR land area:
   (data-point-children facts :bbr-land-area)
-  ;;=> (:house-land-area :model-value)
+  ;; => (:house-land-area :model-value)
   )
-  
 
 (defn lineage-graph
   [db]
@@ -158,8 +157,7 @@
   Edges are represented as a list of tuples,
   (upstream-provider upstream-point downstream-provider downstream-point)."
   [title point-edges]
-  (let [point-edges (lineage-graph facts)
-        provider-point-pairs (->> (for [[upr upt dpr dpt] point-edges]
+  (let [provider-point-pairs (->> (for [[upr upt dpr dpt] point-edges]
                                     [[upr upt] [dpr dpt]])
                                   (apply concat)
                                   concat)
@@ -194,6 +192,27 @@
   )
   
 
+(defn impact-graph
+  "Get the edges representing the impact of changes to a data-point,
+  the point and its related downstream data-points."
+  [db data-point]
+  (pldb/with-db db
+    (run* [q]
+      (fresh [parent-point parent-provider child-point child-provider edges]
+        ;; child has data-point as ancestor
+        (ancestoro child-point data-point)
+        ;; parent is a parent of child
+        (derived parent-point child-point)
+        ;; ..which also has data-point as ancestor
+        (ancestoro parent-point data-point)
+        ;; Add the provider information
+        (source parent-point parent-provider)
+        (source child-point child-provider)
+        (== q [parent-provider parent-point child-provider child-point])))))
 
 
-
+(comment
+  (->> (impact-graph facts :bbr-house-area)
+       (point-edges-to-plantuml "Impact of changes to BBR house area.")
+       println)
+  )
